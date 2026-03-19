@@ -6,19 +6,22 @@ import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { RefreshCw, Star, Quote } from 'lucide-react';
 
+// Ajuste os caminhos de importação conforme sua estrutura
+import { EditReview } from '@/components/blocks/ModalEditReview';
+import { DeleteReview } from '@/components/blocks/ModalDeleteReview'; // <-- IMPORTANTE
+
 export function ReviewsPageClient({ initialReviews, serverError }) {
-  const { reviews, loading, error, refetch } = useReviews({
+  // Pegamos as funções 'updateReview' e a nova 'deleteReview' do hook
+  const { reviews, loading, error, refetch, updateReview, deleteReview } = useReviews({
     initialReviews,
     fetchOnMount: serverError, 
   });
 
-  // Função helper para pegar a primeira letra do nome para o Avatar
   const getInitials = (name) => name?.charAt(0).toUpperCase() || '?';
 
   return (
     <div className="min-h-screen w-full bg-zinc-50/50 px-4 py-12 font-sans dark:bg-zinc-950">
       <main className="mx-auto w-full max-w-6xl space-y-10">
-        {/* Header Minimalista */}
         <header className="flex flex-col items-start justify-between gap-6 rounded-2xl bg-white p-8 shadow-sm ring-1 ring-zinc-200 dark:bg-zinc-900 dark:ring-zinc-800 md:flex-row md:items-center">
           <div className="space-y-2">
             <h1 className="text-4xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">
@@ -35,19 +38,17 @@ export function ReviewsPageClient({ initialReviews, serverError }) {
         </header>
 
         {error && (
-          <p className="text-sm font-medium text-red-500">
-            Erro ao carregar: {error}
+          <p className="text-sm font-medium text-red-500 bg-red-50 p-3 rounded-lg border border-red-200 dark:bg-red-950/50 dark:border-red-800">
+            Erro: {error}
           </p>
         )}
 
-        {/* Grid de Depoimentos estilo Masonry/Cards */}
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {reviews.map((review) => (
             <Card 
               key={review.id} 
-              className="relative overflow-hidden border-none bg-white shadow-md transition-shadow hover:shadow-lg dark:bg-zinc-900"
+              className="relative overflow-hidden border-none bg-white shadow-md transition-shadow hover:shadow-lg dark:bg-zinc-900 flex flex-col"
             >
-              {/* Ícone de aspas d'água no fundo */}
               <Quote className="absolute -right-4 -top-4 h-24 w-24 rotate-12 text-zinc-100 dark:text-zinc-800/50" />
               
               <CardHeader className="relative z-10 flex flex-row items-center gap-4 pb-2">
@@ -60,7 +61,6 @@ export function ReviewsPageClient({ initialReviews, serverError }) {
                   <span className="font-semibold text-zinc-900 dark:text-zinc-50">
                     {review.author}
                   </span>
-                  {/* Renderização dinâmica de estrelas reais */}
                   <div className="flex items-center gap-0.5 mt-0.5">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <Star 
@@ -76,15 +76,29 @@ export function ReviewsPageClient({ initialReviews, serverError }) {
                 </div>
               </CardHeader>
               
-              <CardContent className="relative z-10 pt-4">
-                <p className="text-zinc-600 leading-relaxed dark:text-zinc-300">
-                  "{review.comment}"
-                </p>
-                {review.recipeName && (
-                  <p className="mt-4 text-xs font-medium text-primary/80 uppercase tracking-wider">
-                    — Fez: {review.recipeName}
+              {/* flex-grow garante que o conteúdo ocupe o espaço e empurre o rodapé para baixo */}
+              <CardContent className="relative z-10 pt-4 flex flex-col justify-between">
+                <div>
+                  <p className="text-zinc-600 leading-relaxed dark:text-zinc-300">
+                    "{review.comment}"
                   </p>
-                )}
+                  {review.recipeName && (
+                    <p className="mt-4 text-xs font-medium text-primary/80 uppercase tracking-wider">
+                      — Fez: {review.recipeName}
+                    </p>
+                  )}
+                </div>
+
+                {/* RODAPÉ DE AÇÕES: Canto inferior direito, com borda e padding */}
+                <div className="relative z-20 mt-6 pt-3 flex justify-end items-center gap-2 border-t border-zinc-100 dark:border-zinc-800">
+                  
+                  {/* COMPONENTE DE DELETAR (Novo) */}
+                  <DeleteReview reviewId={review.id} onDelete={deleteReview} />
+                  
+                  {/* COMPONENTE DE EDITAR (Já existia, manteve o estilo) */}
+                  <EditReview review={review} onSave={updateReview} />
+                  
+                </div>
               </CardContent>
             </Card>
           ))}
