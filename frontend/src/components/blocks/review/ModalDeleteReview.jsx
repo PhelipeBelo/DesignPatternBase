@@ -21,14 +21,12 @@ export function DeleteReview({ reviewId, onDelete }) {
   const handleDelete = async () => {
     setIsDeleting(true);
     await onDelete(reviewId);
-    // Não precisamos fechar o modal manualmente, o AlertDialogAction já faz isso
     setIsDeleting(false);
   };
 
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        {/* Botão Gatilho: Ícone de lixeira vermelho, variante ghost para ser discreto */}
         <Button 
           variant="ghost" 
           size="icon" 
@@ -50,7 +48,6 @@ export function DeleteReview({ reviewId, onDelete }) {
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancelar</AlertDialogCancel>
-          {/* Botão de Ação: Estilo destrutivo (vermelho) */}
           <AlertDialogAction 
             onClick={handleDelete}
             className="bg-red-600 hover:bg-red-700 focus:ring-red-600"

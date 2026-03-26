@@ -1,18 +1,14 @@
-import { ReviewsPageClient } from "@/components/blocks/ReviewsPageClient";
+import { ReviewsPageClient } from "@/components/blocks/review/ReviewsPageClient";
 
-
-// A função de fetch agora recebe o ID para buscar no servidor
 async function getReviews(recipeId) {
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
   
   try {
-    const res = await fetch(`${API_URL}/reviews?recipeId=${recipeId}`, {
+    const res = await fetch(`${API_URL}/recipes/${recipeId}/reviews`, {
       cache: 'no-store',
     });
 
-    if (!res.ok) {
-      return { data: [], hasError: true };
-    }
+    if (!res.ok) return { data: [], hasError: true };
 
     const data = await res.json();
     return { data, hasError: false };
@@ -21,9 +17,9 @@ async function getReviews(recipeId) {
   }
 }
 
-// O componente de página recebe "params" da URL (ex: /recipes/1/reviews)
 export default async function RecipeReviewsPage({ params }) {
-  const { id } = params; // Pegamos o ID da receita da URL
+  const resolvedParams = await params;
+  const id = resolvedParams.id; 
   
   const { data, hasError } = await getReviews(id);
 

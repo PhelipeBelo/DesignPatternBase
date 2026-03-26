@@ -18,10 +18,10 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+    // O suppressHydrationWarning avisa o Next.js para ignorar essas pequenas 
+    // diferenças de ID geradas por extensões ou pelo Radix no dev mode.
+    <html lang="pt-BR" suppressHydrationWarning>
+      <body>
         {children}
       </body>
     </html>

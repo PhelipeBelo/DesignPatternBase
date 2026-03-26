@@ -1,20 +1,23 @@
-'use client'; // Garanta que este arquivo seja tratado como client component se necessário
+'use client'; 
 
 import { useEffect, useState, useCallback } from 'react';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
-export function useReviews({ initialReviews = [], fetchOnMount = false } = {}) {
+export function useReviews({ recipeId, initialReviews = [], fetchOnMount = false } = {}) {
   const [reviews, setReviews] = useState(initialReviews);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const fetchReviews = useCallback(async () => {
+    if (!recipeId) return;
+    
     setLoading(true);
     setError(null);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/reviews`);
+      // Rota GET corrigida conforme o Swagger
+      const response = await fetch(`${API_BASE_URL}/recipes/${recipeId}/reviews`);
 
       if (!response.ok) {
         throw new Error(`Erro ao buscar avaliações (status ${response.status})`);
@@ -27,24 +30,46 @@ export function useReviews({ initialReviews = [], fetchOnMount = false } = {}) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [recipeId]);
+
+  const addReview = async (newReview) => {
+    // ADICIONE ESTE LOG PARA VER O QUE ESTÁ CHEGANDO:
+    console.log("Tentando salvar na receita de ID:", recipeId);
+    console.log("URL que será chamada:", `${API_BASE_URL}/recipes/${recipeId}/reviews`);
+
+    if (!recipeId) return { success: false, error: "ID da receita ausente" };
+
+    try {
+     
+      const response = await fetch(`${API_BASE_URL}/recipes/${recipeId}/reviews`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newReview),
+      });
+
+      if (!response.ok) throw new Error('Erro ao adicionar avaliação');
+
+      const savedReview = await response.json();
+      setReviews((prevReviews) => [savedReview, ...prevReviews]);
+
+      return { success: true };
+    } catch (err) {
+      console.error(err);
+      return { success: false, error: err.message };
+    }
+  };
 
   const updateReview = async (updatedReview) => {
     try {
       const response = await fetch(`${API_BASE_URL}/reviews/${updatedReview.id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedReview),
       });
 
-      if (!response.ok) {
-        throw new Error('Erro ao atualizar avaliação');
-      }
+      if (!response.ok) throw new Error('Erro ao atualizar avaliação');
 
       const savedReview = await response.json();
-
       setReviews((prevReviews) => 
         prevReviews.map((rev) => (rev.id === savedReview.id ? savedReview : rev))
       );
@@ -56,19 +81,15 @@ export function useReviews({ initialReviews = [], fetchOnMount = false } = {}) {
     }
   };
 
-  // NOVA FUNÇÃO: Deleta a avaliação na API e no estado local
   const deleteReview = async (reviewId) => {
-    setLoading(true); // Opcional: setar loading global
+    setLoading(true); 
     try {
       const response = await fetch(`${API_BASE_URL}/reviews/${reviewId}`, {
         method: 'DELETE',
       });
 
-      if (!response.ok) {
-        throw new Error('Erro ao deletar avaliação');
-      }
+      if (!response.ok) throw new Error('Erro ao deletar avaliação');
 
-      // Remove a avaliação da lista na tela imediatamente
       setReviews((prevReviews) => prevReviews.filter((rev) => rev.id !== reviewId));
 
       return { success: true };
@@ -87,11 +108,7 @@ export function useReviews({ initialReviews = [], fetchOnMount = false } = {}) {
   }, [fetchOnMount, fetchReviews]);
 
   return {
-    reviews,
-    loading,
-    error,
-    refetch: fetchReviews,
-    updateReview,
-    deleteReview, // <-- Exportamos a função de deletar aqui
+    reviews, loading, error, refetch: fetchReviews,
+    addReview, updateReview, deleteReview, 
   };
 }
